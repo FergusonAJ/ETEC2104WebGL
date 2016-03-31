@@ -25,12 +25,10 @@ class Sphere
 	{
 		
 		var translationMatrix = mat4.create();
-		mat4.translate(translationMatrix, mat4.create(), [0,0,-3]);
-		mat4.transpose(translationMatrix, translationMatrix);
-		//mat4.mul(worldMatrix, rotMatrix, translationMatrix);
-		mat4.scale(worldMatrix, translationMatrix, vec3.fromValues(0.5,0.5,1))
-		mat4.translate(worldMatrix, worldMatrix, [2,0,0]);
+		//This line is super nasty. I still need to refactor from row major to column major. This is a by product of using the wrong format... -Austin
+		mat4.mul(worldMatrix,mat4.transpose(mat4.create(), mat4.translate(mat4.create(), mat4.create(), [1,0,0])), worldMatrix);
 		ctx.uniform1f(isBillboardLoc,1.0);
+		ctx.uniform1f(scaleLoc, 0.25);
 		ctx.uniformMatrix4fv(worldMLoc,false,worldMatrix);
 		
 		ctx.bindBuffer(ctx.ARRAY_BUFFER, this.vBuff);
