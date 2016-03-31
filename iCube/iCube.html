@@ -123,6 +123,14 @@ var animate = function(time)
 	elapsed = time - time_old;
 	time_old = time;
 	worldMatrix = mat4.create();
+	for(var i = 0; i < 3; i++)
+	{
+		sphere.position[i] += 0.0005 * elapsed;
+		if(sphere.position[i] > 1.0)
+		{
+			sphere.position[i] = -1.0;
+		}
+	}
 	if(anim1)
 	{
 		mat4.rotateX(rotMatrix, rotMatrix, Math.PI * elapsed * 0.001);
