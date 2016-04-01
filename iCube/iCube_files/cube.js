@@ -1,5 +1,7 @@
+//Super simple cube class, to get the cube data and drawing out of the main code
 class Cube
 {
+	//Initialize the cube's data
 	constructor()
 	{
 		this.vBuff = ctx.createBuffer();
@@ -26,6 +28,7 @@ class Cube
 
 	}
 	
+	//Draw the cube to the screen
 	draw()
 	{
 		ctx.uniform1f(isBillboardLoc,0.0);

@@ -13,6 +13,7 @@
 <body class=" hasGoogleVoiceExt">
 <canvas id="MainCanvas" width="400" height="400"></canvas>
 <script type="text/javascript">
+//Event Handling
 document.addEventListener('keydown', function(event) {
 //w
     if(event.keyCode == 87) {
@@ -30,6 +31,13 @@ document.addEventListener('keydown', function(event) {
 	if(event.keyCode == 68) {
         anim4 = true;
     }
+	
+	if(event.keyCode == 32){
+		if(sphere.velocity[0] == 0.0 && sphere.velocity[1] == 0.0 && sphere.velocity[2] == 0.0)
+		{
+			sphere.launch();
+		}
+	}
 });
 document.addEventListener('keyup', function(event) {
 //w
@@ -49,6 +57,8 @@ document.addEventListener('keyup', function(event) {
         anim4 = false;
     }
 });
+
+//Canvas and WebGL setup
 var canvas = document.getElementById('MainCanvas');
 var ctx = canvas.getContext('webgl');
 ctx.viewport(0, 0, 400, 400);
@@ -61,7 +71,7 @@ canvas.style.margin = '0px';
 canvas.width = window.innerHeight;
 canvas.height = window.innerHeight;
 
-
+//Shader setup
 var vsp = ctx.createShader(ctx.VERTEX_SHADER);
 ctx.shaderSource(vsp, vs);
 ctx.compileShader(vsp);
@@ -84,10 +94,11 @@ ctx.useProgram(shaderProgram);
 var vertpa = ctx.getAttribLocation(shaderProgram, 'vertexPosition');
 ctx.enableVertexAttribArray(vertpa);
 
+//Init entities
 var cube = new Cube();
 var sphere = new Sphere();
 
-
+//Borrowed code. Did not write this, but lost the url -Austin
 function get_projection(angle, a, zMin, zMax) 
 {
 	var ang = Math.tan((angle*.5)*Math.PI/180);
@@ -99,38 +110,33 @@ function get_projection(angle, a, zMin, zMax)
 		];
 }
 	
+//Init matrices
 var projMatrix = get_projection(40, canvas.width/canvas.height, 1, 100);
 var worldMatrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 var viewMatrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+//Grab uniform locations
 var worldMLoc = ctx.getUniformLocation(shaderProgram, 'worldMatrix');
 var viewMLoc = ctx.getUniformLocation(shaderProgram, 'viewMatrix');
 var projMLoc = ctx.getUniformLocation(shaderProgram, 'projMatrix');
 var isBillboardLoc = ctx.getUniformLocation(shaderProgram, 'isBillboard');
 var scaleLoc = ctx.getUniformLocation(shaderProgram, 'scale');
 
+//Loop variables
 var time_old = 0;
-var lastMat = 0;
 var rotMatrix = mat4.create();
 var translationMatrix = mat4.create();
-var timer = 0.0;
 var anim1 = false;
 var anim2 = false;
 var anim3 = false;
 var anim4 = false;
+var launch = false;
 
 var animate = function(time) 
 {
 	elapsed = time - time_old;
 	time_old = time;
 	worldMatrix = mat4.create();
-	for(var i = 0; i < 3; i++)
-	{
-		sphere.position[i] += 0.0005 * elapsed;
-		if(sphere.position[i] > 1.0)
-		{
-			sphere.position[i] = -1.0;
-		}
-	}
+	
 	if(anim1)
 	{
 		mat4.rotateX(rotMatrix, rotMatrix, Math.PI * elapsed * 0.001);
@@ -147,10 +153,10 @@ var animate = function(time)
 	{
 		mat4.rotateY(rotMatrix, rotMatrix, -Math.PI * elapsed * 0.001);
 	}
-	if(timer > Math.PI * 6)
-	{
-		timer = 0.0;
-	}
+	
+	//Rendering
+	sphere.update(elapsed);
+	
 	mat4.translate(translationMatrix, mat4.create(), [0,0,-3]);
 	mat4.transpose(translationMatrix, translationMatrix);
 	mat4.mul(worldMatrix, rotMatrix, translationMatrix);
