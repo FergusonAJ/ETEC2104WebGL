@@ -2,15 +2,18 @@
 <!-- saved from url=(0076)https://www.ssucet.org/pluginfile.php/1109/mod_resource/content/0/icube.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>OOSE WebGL Test #1</title>
+<title>OOSE WebGL Milestone #2</title>
 <script type="text/javascript" src="./iCube_files/gl-matrix-min.js"></script><style type="text/css"></style>
 <script type="text/javascript" src="./iCube_files/vs.js"></script><style type="text/css"></style>
 <script type="text/javascript" src="./iCube_files/fs.js"></script><style type="text/css"></style>
+<script type="text/javascript" src="./iCube_files/cube.js"></script><style type="text/css"></style>
+<script type="text/javascript" src="./iCube_files/sphere.js"></script><style type="text/css"></style>
 </head>
 
 <body class=" hasGoogleVoiceExt">
 <canvas id="MainCanvas" width="400" height="400"></canvas>
 <script type="text/javascript">
+//Event Handling
 document.addEventListener('keydown', function(event) {
 //w
     if(event.keyCode == 87) {
@@ -26,8 +29,15 @@ document.addEventListener('keydown', function(event) {
     }
 //d
 	if(event.keyCode == 68) {
-        alert('Right was pressed');
+        anim4 = true;
     }
+	
+	if(event.keyCode == 32){
+		if(sphere.velocity[0] == 0.0 && sphere.velocity[1] == 0.0 && sphere.velocity[2] == 0.0)
+		{
+			sphere.launch();
+		}
+	}
 });
 document.addEventListener('keyup', function(event) {
 //w
@@ -44,9 +54,24 @@ document.addEventListener('keyup', function(event) {
     }
 //d
 	if(event.keyCode == 68) {
-        alert('Right was pressed');
+        anim4 = false;
     }
 });
+document.addEventListener('mousemove',function(event){
+
+	var box = canvas.getBoundingClientRect();
+	mousePath = vec2.fromValues((event.clientX - box.left),(event.clientY - box.top));
+temp = vec2.fromValues((mousePath[0]-prevMousePath[0]), (mousePath[1]-prevMousePath[1]));
+console.log(temp);
+
+	//mouseAngle = Math.atan2(temp[0], temp[1])*(180/Math.PI);
+	prevMousePath = [mousePath[0], mousePath[1]];
+	anim5 = true;
+});
+
+
+//Canvas and WebGL setup
+var temp = vec2.create();
 var canvas = document.getElementById('MainCanvas');
 var ctx = canvas.getContext('webgl');
 ctx.viewport(0, 0, 400, 400);
@@ -59,10 +84,12 @@ canvas.style.margin = '0px';
 canvas.width = window.innerHeight;
 canvas.height = window.innerHeight;
 
-
+//Shader setup
 var vsp = ctx.createShader(ctx.VERTEX_SHADER);
 ctx.shaderSource(vsp, vs);
 ctx.compileShader(vsp);
+var error = ctx.getShaderInfoLog(vsp);
+console.log(error);
 
 var fsp = ctx.createShader(ctx.FRAGMENT_SHADER);
 ctx.shaderSource(fsp, fs);
@@ -72,118 +99,92 @@ var shaderProgram = ctx.createProgram();
 ctx.attachShader(shaderProgram, vsp);
 ctx.attachShader(shaderProgram, fsp);
 ctx.linkProgram(shaderProgram);
+var error = ctx.getShaderInfoLog(fsp);
+console.log(error);
 
 ctx.useProgram(shaderProgram);
 
 var vertpa = ctx.getAttribLocation(shaderProgram, 'vertexPosition');
 ctx.enableVertexAttribArray(vertpa);
 
+//Init entities
+var cube = new Cube();
+var sphere = new Sphere();
 
-
-var vBuff = ctx.createBuffer();
-ctx.bindBuffer(ctx.ARRAY_BUFFER, vBuff);
-				 
-var vertices =[1.0, 1.0, -1.0, 
-				-1.0,1.0,-1.0,
-				-1.0,-1.0,-1.0,
-				1.0,-1.0,-1.0,
-				1.0, 1.0, 1.0, 
-				-1.0,1.0,1.0,
-				-1.0,-1.0,1.0,
-				1.0,-1.0,1.0];
-
-var indices = [0,1, 1,2, 2,3, 3,0,
-				4,5, 5,6, 6,7, 7,4,
-				0,4, 1,5, 2,6, 3,7];
-				
-ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(vertices), ctx.STATIC_DRAW);
-ctx.vertexAttribPointer(vertpa, 3, ctx.FLOAT, false, 0, 0);
-
-
-var iBuff = ctx.createBuffer();
-ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, iBuff);
-ctx.bufferData(ctx.ELEMENT_ARRAY_BUFFER, new Int16Array(indices), ctx.STATIC_DRAW);
-
-function get_projection(angle, a, zMin, zMax) {
-var ang = Math.tan((angle*.5)*Math.PI/180);
-return [
-   0.5/ang, 0 , 0, 0,
-   0, 0.5*a/ang, 0, 0,
-   0, 0, -(zMax+zMin)/(zMax-zMin), -1,
-   0, 0, (-2*zMax*zMin)/(zMax-zMin), 0 ];
+//Borrowed code. Did not write this, but lost the url -Austin
+function get_projection(angle, a, zMin, zMax) 
+{
+	var ang = Math.tan((angle*.5)*Math.PI/180);
+	return [
+		0.5/ang, 0 , 0, 0,
+		0, 0.5*a/ang, 0, 0,
+		0, 0, -(zMax+zMin)/(zMax-zMin), -1,
+		0, 0, (-2*zMax*zMin)/(zMax-zMin), 0 
+		];
 }
 	
+//Init matrices
 var projMatrix = get_projection(40, canvas.width/canvas.height, 1, 100);
-//mat4.perspective(projMatrix, Math.PI / 4, canvas.width/canvas.height, 1, 100);
 var worldMatrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 var viewMatrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
-//viewMatrix[14] = viewMatrix[14] - 6;
+//Grab uniform locations
 var worldMLoc = ctx.getUniformLocation(shaderProgram, 'worldMatrix');
 var viewMLoc = ctx.getUniformLocation(shaderProgram, 'viewMatrix');
 var projMLoc = ctx.getUniformLocation(shaderProgram, 'projMatrix');
+var isBillboardLoc = ctx.getUniformLocation(shaderProgram, 'isBillboard');
+var scaleLoc = ctx.getUniformLocation(shaderProgram, 'scale');
 
-console.log(worldMatrix);
-console.log(viewMatrix);
-console.log(projMatrix);
+//Loop variables
 var time_old = 0;
-var lastMat = 0;
 var rotMatrix = mat4.create();
 var translationMatrix = mat4.create();
-var timer = 0.0;
 var anim1 = false;
 var anim2 = false;
 var anim3 = false;
 var anim4 = false;
+var anim5 = false;
+var launch = false;
+var mouseAngle;
+var mousePath;
+var prevMousePath = vec2.fromValues(0,0);
 
 var animate = function(time) 
 {
 	elapsed = time - time_old;
 	time_old = time;
 	worldMatrix = mat4.create();
-	//mat4.rotateX(rotMatrix, rotMatrix, Math.PI * elapsed * 0.0003);
-	//mat4.rotateY(rotMatrix, mat4.create(), Math.PI/4);
 	
-	//if(timer < Math.PI * 2)
 	if(anim1)
 	{
-		mat4.rotateX(rotMatrix, rotMatrix, Math.PI * elapsed*0.001);
+		mat4.rotateX(rotMatrix, rotMatrix, Math.PI * elapsed * 0.001);
 	}
-	//else if(timer > Math.PI * 2 && timer < Math.PI * 4 )
 	if(anim2)
 	{
-		mat4.rotateY(rotMatrix, rotMatrix, Math.PI * elapsed*0.001);
+		mat4.rotateY(rotMatrix, rotMatrix, Math.PI * elapsed * 0.001);
 	}
-	//else if(timer > Math.PI * 4 && timer < Math.PI * 6)
 	if(anim3)
 	{
-		mat4.rotateZ(rotMatrix, rotMatrix, Math.PI * elapsed*0.001);
+		mat4.rotateX(rotMatrix, rotMatrix, -Math.PI * elapsed * 0.001);
 	}
-	/*
-	else if(anim4)
+	if(anim4)
 	{
-		mat4.rotateZ(rotMatrix, rotMatrix, Math.PI * elapsed * 0.0003);
+		mat4.rotateY(rotMatrix, rotMatrix, -Math.PI * elapsed * 0.001);
 	}
-	*/
-	//timer += Math.PI * elapsed * 0.0003;
-	if(timer > Math.PI * 6)
+	if(anim5)
 	{
-		timer = 0.0;
+		//mat4.rotate(rotMatrix, rotMatrix, mouseAngle*elapsed*0.0001, vec3.fromValues(mousePath[0],mousePath[1],0));
+		mat4.rotateX(rotMatrix,rotMatrix,-temp[1]*elapsed*0.0005);
+		mat4.rotateY(rotMatrix,rotMatrix,-temp[0]*elapsed*0.0005);
 	}
-//	anim1 = false;
-//anim2 = false;
-//anim3 = false;
-	//console.log("rot: " + rotMatrix);
 	
-	//mat4.translate(worldMatrix, mat4.create(),[0,0,-6]);
-	//console.log("world:" + worldMatrix);
+	
+	//Rendering
+	sphere.update(elapsed);
+	
+	
 	mat4.translate(translationMatrix, mat4.create(), [0,0,-3]);
-	//worldMatrix = mat4.clone(translationMatrix);
 	mat4.transpose(translationMatrix, translationMatrix);
 	mat4.mul(worldMatrix, rotMatrix, translationMatrix);
-	//console.log();
-	//mat4.multiply(worldMatrix, translationMatrix, rotMatrix);
-	//console.log(rotMatrix);
-	//console.log(worldMatrix);
 	ctx.uniformMatrix4fv(worldMLoc,false,worldMatrix);
 	ctx.uniformMatrix4fv(viewMLoc,false,viewMatrix);
 	ctx.uniformMatrix4fv(projMLoc,false,projMatrix);
@@ -193,7 +194,10 @@ var animate = function(time)
 
 	ctx.viewport(0, 0, canvas.width, canvas.height);
 	ctx.clear(ctx.COLOR_BUFFER_BIT);
-	ctx.drawElements(ctx.LINES, indices.length, ctx.UNSIGNED_SHORT,0);
+	
+	cube.draw();
+	sphere.draw();
+	anim5 = false;
 	window.requestAnimationFrame(animate);
 }
 animate(0);
