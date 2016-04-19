@@ -57,8 +57,26 @@ document.addEventListener('keyup', function(event) {
         anim4 = false;
     }
 });
+<<<<<<< HEAD
 
 //Canvas and WebGL setup
+=======
+document.addEventListener('mousemove',function(event){
+
+	var box = canvas.getBoundingClientRect();
+	mousePath = vec2.fromValues((event.clientX - box.left),(event.clientY - box.top));
+temp = vec2.fromValues((mousePath[0]-prevMousePath[0]), (mousePath[1]-prevMousePath[1]));
+console.log(temp);
+
+	//mouseAngle = Math.atan2(temp[0], temp[1])*(180/Math.PI);
+	prevMousePath = [mousePath[0], mousePath[1]];
+	anim5 = true;
+});
+
+
+//Canvas and WebGL setup
+var temp = vec2.create();
+>>>>>>> 28c8df0a7b8d1c83f1ea1f820b1362546e34f05c
 var canvas = document.getElementById('MainCanvas');
 var ctx = canvas.getContext('webgl');
 ctx.viewport(0, 0, 400, 400);
@@ -129,7 +147,15 @@ var anim1 = false;
 var anim2 = false;
 var anim3 = false;
 var anim4 = false;
+<<<<<<< HEAD
 var launch = false;
+=======
+var anim5 = false;
+var launch = false;
+var mouseAngle;
+var mousePath;
+var prevMousePath = vec2.fromValues(0,0);
+>>>>>>> 28c8df0a7b8d1c83f1ea1f820b1362546e34f05c
 
 var animate = function(time) 
 {
@@ -153,10 +179,25 @@ var animate = function(time)
 	{
 		mat4.rotateY(rotMatrix, rotMatrix, -Math.PI * elapsed * 0.001);
 	}
+<<<<<<< HEAD
 	
 	//Rendering
 	sphere.update(elapsed);
 	
+=======
+	if(anim5)
+	{
+		//mat4.rotate(rotMatrix, rotMatrix, mouseAngle*elapsed*0.0001, vec3.fromValues(mousePath[0],mousePath[1],0));
+		mat4.rotateX(rotMatrix,rotMatrix,-temp[1]*elapsed*0.0005);
+		mat4.rotateY(rotMatrix,rotMatrix,-temp[0]*elapsed*0.0005);
+	}
+	
+	
+	//Rendering
+	sphere.update(elapsed);
+	
+	
+>>>>>>> 28c8df0a7b8d1c83f1ea1f820b1362546e34f05c
 	mat4.translate(translationMatrix, mat4.create(), [0,0,-3]);
 	mat4.transpose(translationMatrix, translationMatrix);
 	mat4.mul(worldMatrix, rotMatrix, translationMatrix);
@@ -172,7 +213,11 @@ var animate = function(time)
 	
 	cube.draw();
 	sphere.draw();
+<<<<<<< HEAD
 	
+=======
+	anim5 = false;
+>>>>>>> 28c8df0a7b8d1c83f1ea1f820b1362546e34f05c
 	window.requestAnimationFrame(animate);
 }
 animate(0);
