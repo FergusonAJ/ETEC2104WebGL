@@ -4,10 +4,12 @@
 
 <title>OOSE WebGL Milestone #2</title>
 <script type="text/javascript" src="./iCube_files/gl-matrix-min.js"></script><style type="text/css"></style>
-<script type="text/javascript" src="./iCube_files/vs.js"></script><style type="text/css"></style>
-<script type="text/javascript" src="./iCube_files/fs.js"></script><style type="text/css"></style>
-<script type="text/javascript" src="./iCube_files/cube.js"></script><style type="text/css"></style>
-<script type="text/javascript" src="./iCube_files/sphere.js"></script><style type="text/css"></style>
+<script type="text/javascript" src="./iCube_files/vs.js"></script>
+<script type="text/javascript" src="./iCube_files/fs.js"></script>
+<script type="text/javascript" src="./iCube_files/cube.js"></script>
+<script type="text/javascript" src="./iCube_files/sphere.js"></script>
+<script type="text/javascript" src="./iCube_files/obstacle.js"></script>
+
 </head>
 
 <body class=" hasGoogleVoiceExt">
@@ -74,6 +76,7 @@ console.log(temp);
 var temp = vec2.create();
 var canvas = document.getElementById('MainCanvas');
 var ctx = canvas.getContext('webgl');
+ctx.enable(ctx.DEPTH_TEST);
 ctx.viewport(0, 0, 400, 400);
 ctx.clearColor(0.8, 0.8, 0.8, 1.0);
 ctx.clear(ctx.COLOR_BUFFER_BIT);
@@ -110,6 +113,8 @@ ctx.enableVertexAttribArray(vertpa);
 //Init entities
 var cube = new Cube();
 var sphere = new Sphere();
+var obstest = new Obstacle();
+
 
 //Borrowed code. Did not write this, but lost the url -Austin
 function get_projection(angle, a, zMin, zMax) 
@@ -190,13 +195,18 @@ var animate = function(time)
 	ctx.uniformMatrix4fv(projMLoc,false,projMatrix);
 
 	ctx.enable(ctx.BLEND);
+	
 	ctx.blendFunc(ctx.SRC_ALPHA, ctx.ONE_MINUS_SRC_ALPHA);
 
 	ctx.viewport(0, 0, canvas.width, canvas.height);
 	ctx.clear(ctx.COLOR_BUFFER_BIT);
 	
+	
 	cube.draw();
+	obstest.draw();
 	sphere.draw();
+	
+	
 	anim5 = false;
 	window.requestAnimationFrame(animate);
 }
