@@ -4,23 +4,32 @@ precision highp float;
 
 attribute vec3 vertexPosition;
 uniform float linePos[4];
-varying float linePosV[4];
+varying vec3 vPos;
 
 uniform mat4 worldMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
-
+uniform float isBillboard;
+uniform float scale;
 void main(void)
 {
-	for (int i = 0; i < 4; ++i)
+	vPos = vertexPosition;
+	vec4 p;
+	if(isBillboard == 0.0)
 	{
-		linePosV[i] = linePos[i];
+		p = vec4(vertexPosition.xyz, 1.0);
 	}
-	vec4 p = vec4(vertexPosition.xyz, 1.0);
+	else
+	{
+		p = vec4(0,0,0,1);
+	}
 	p = p * worldMatrix;
-	//p.z = p.z - 12.0;
-	p = p * viewMatrix;
-	p = p * projMatrix;
+	p = viewMatrix * p;
+	p = projMatrix * p;
+	if(isBillboard != 0.0)
+	{
+		p += vec4(vertexPosition.xyz, 1.0) * scale;
+	}
 	gl_Position = p;
 }
 `;
