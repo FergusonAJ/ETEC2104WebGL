@@ -64,7 +64,7 @@ document.addEventListener('mousemove',function(event){
 	var box = canvas.getBoundingClientRect();
 	mousePath = vec2.fromValues((event.clientX - box.left),(event.clientY - box.top));
 temp = vec2.fromValues((mousePath[0]-prevMousePath[0]), (mousePath[1]-prevMousePath[1]));
-console.log(temp);
+//console.log(temp);
 
 	//mouseAngle = Math.atan2(temp[0], temp[1])*(180/Math.PI);
 	prevMousePath = [mousePath[0], mousePath[1]];
@@ -204,6 +204,7 @@ var animate = function(time)
 	
 	cube.draw();
 	obstest.draw();
+	obstest.test_move();
 	sphere.draw();
 	
 	

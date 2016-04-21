@@ -1,10 +1,17 @@
-//Super simple cube class, to get the cube data and drawing out of the main code
+//Jalen Cureton
+
+//Makes a cube obstacle
 class Obstacle
 {
+	
 	//Initialize the cube's data
 	constructor()
 	{
+		this.position = vec3.fromValues(0,0,0); //Default at the middle of the cube
+		
+		//Creating a buffer to store data
 		this.vBuff = ctx.createBuffer();
+		//binds the buffer so we can feed the data to the buffer
 		ctx.bindBuffer(ctx.ARRAY_BUFFER, this.vBuff);
 						 
 		this.vertices = [
@@ -45,12 +52,14 @@ class Obstacle
 		  -0.2,  0.2, -0.2
 		];
 		
+		//Send data to the buffer
 		ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(this.vertices), ctx.STATIC_DRAW);
 		
 		
-		
-		this.ColorBuffer = ctx.createBuffer();
-		ctx.bindBuffer(ctx.ARRAY_BUFFER, this.ColorBuffer);
+		//Creating a buffer to store data
+		this.cBuff = ctx.createBuffer();
+		//binds the buffer so we can feed the data to the buffer
+		ctx.bindBuffer(ctx.ARRAY_BUFFER, this.cBuff);
 		
 		this.colors = [
 			[1.0,  1.0,  1.0,  1.0],    // Front face: white
@@ -63,12 +72,12 @@ class Obstacle
 		var generatedColors=[];
 		for (var j=0; j<6; j++) {
 			for (var i=0; i<4; i++) {
-				generatedColors = generatedColors.concat(this.colors[j]);
+				generatedColors = generatedColors.concat(this.colors[j]);//Creating the color array to feed into color buffer
 			}
 		}
 		
 		
-		
+		//Send data to the buffer, finally.
 		ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array(generatedColors), ctx.STATIC_DRAW);
 		
 		this.iBuff = ctx.createBuffer();
@@ -84,7 +93,7 @@ class Obstacle
 		];
 
 
-
+		//Send data to the buffer
 		ctx.bufferData(ctx.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), ctx.STATIC_DRAW);		
 
 
@@ -96,10 +105,22 @@ class Obstacle
 	//Draw the cube to the screen
 	draw()
 	{
+		//temp matrix to store values of transformation
+		var tempm = mat4.create();
+		
+		//Places the cube at its poistion in the world
+		mat4.mul(tempm,mat4.transpose(mat4.create(), mat4.translate(mat4.create(), mat4.create(), this.position)), worldMatrix);//
+		ctx.uniformMatrix4fv(worldMLoc,false,tempm);
+		//Setting uniforms for shaders and bindings for opengl
 		ctx.uniform1f(isBillboardLoc,0.0);
 		ctx.bindBuffer(ctx.ARRAY_BUFFER, this.vBuff);
 		ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, this.iBuff);
 		ctx.vertexAttribPointer(vertpa, 3, ctx.FLOAT, false, 0, 0);
+		
+		//Finally uses data to draw
 		ctx.drawElements(ctx.TRIANGLES, this.indices.length, ctx.UNSIGNED_SHORT,0);
+		
 	}
+	
+	
 }
